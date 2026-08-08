@@ -1,0 +1,28 @@
+id: service-selector-typo
+title: Service has no endpoints although every pod is Running and Ready
+category: networking
+difficulty: medium
+
+manifests:
+  - manifests/selector-mismatch.yaml
+
+settle_seconds: 45
+
+expected:
+  root_cause: service-selector-mismatch
+  evidence:
+    # The discriminating pair: healthy pods AND empty endpoints together.
+    - "2/2"
+    - "checkout"
+  remediation_targets:
+    - "spec.selector"
+
+# Paired with `readiness-probe-wrong-port`, which presents the identical
+# surface symptom (Service with no endpoints) from the opposite cause.
+# An agent that pattern-matches "no endpoints" without checking pod readiness
+# will get exactly one of this pair wrong, which is the point.
+distractors:
+  - id: readiness-probe-misconfigured
+    why: "Pods are Ready — readiness is not what is withholding them."
+  - id: dns-resolution-failure
+    why: "Name resolution is irrelevant when the Service has no backends."

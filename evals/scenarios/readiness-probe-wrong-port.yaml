@@ -1,0 +1,27 @@
+id: readiness-probe-wrong-port
+title: Service has no endpoints because no pod ever becomes Ready
+category: networking
+difficulty: medium
+
+manifests:
+  - manifests/readiness-wrong-port.yaml
+
+settle_seconds: 45
+
+expected:
+  root_cause: readiness-probe-misconfigured
+  evidence:
+    - "Readiness probe failed"
+    - "9090"
+  remediation_targets:
+    - "spec.containers[].readinessProbe.httpGet.port"
+
+# The mirror of `service-selector-typo`: same symptom, opposite cause. Here the
+# Service selector is correct and the container is healthy — only the probe
+# target port is wrong. Note the container never restarts, which distinguishes
+# a readiness failure from a liveness failure or a crash loop.
+distractors:
+  - id: service-selector-mismatch
+    why: "The selector matches the pod labels correctly."
+  - id: crashloop-application-error
+    why: "Restart count stays at 0 — readiness failures do not restart containers."

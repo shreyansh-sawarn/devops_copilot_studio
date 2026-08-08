@@ -91,7 +91,21 @@ def run_attempt(scenario: dict, run_idx: int, cache_dir: Path) -> dict:
         teardown(namespace)
 
 
+def _load_local_env() -> None:
+    """Local runs read .env; CI gets the same variables from Actions secrets.
+
+    Never overrides an already-set variable, so CI's secrets always win over a
+    stray .env that happens to exist in the workspace.
+    """
+    try:
+        from dotenv import load_dotenv
+    except ImportError:
+        return
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=False)
+
+
 def main() -> int:
+    _load_local_env()
     ap = argparse.ArgumentParser()
     ap.add_argument("--scenarios", default="all")
     ap.add_argument("--runs", type=int, default=3)

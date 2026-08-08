@@ -1,0 +1,23 @@
+id: image-pull-bad-tag
+title: Deployment never starts because the image tag does not exist
+category: workload-admission
+difficulty: easy
+
+manifests:
+  - manifests/image-pull.yaml
+
+settle_seconds: 40
+
+expected:
+  root_cause: image-pull-failure
+  evidence:
+    - "ImagePullBackOff"
+    - "nginx:v99.99.99-nonexistent"
+  remediation_targets:
+    - "spec.containers[].image"
+
+distractors:
+  - id: crashloop-application-error
+    why: "Repeated backoff looks like a crash loop, but the container never started."
+  - id: insufficient-node-resources
+    why: "The pod is not Running, but scheduling succeeded — it is on a node."

@@ -1,0 +1,23 @@
+id: config-missing-envfrom
+title: Container never starts because a referenced ConfigMap does not exist
+category: configuration
+difficulty: easy
+
+manifests:
+  - manifests/config-missing.yaml
+
+settle_seconds: 40
+
+expected:
+  root_cause: config-or-secret-missing
+  evidence:
+    - "CreateContainerConfigError"
+    - "notification-config"
+  remediation_targets:
+    - "spec.containers[].envFrom"
+
+distractors:
+  - id: crashloop-application-error
+    why: "The container never executed, so the application cannot have errored."
+  - id: image-pull-failure
+    why: "The image pulled successfully; the failure is at container creation."

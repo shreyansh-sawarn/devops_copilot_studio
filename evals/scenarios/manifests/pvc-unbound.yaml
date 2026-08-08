@@ -1,0 +1,40 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: archive-data
+spec:
+  accessModes: [ReadWriteOnce]
+  # No StorageClass by this name exists; the claim never binds.
+  storageClassName: fast-ssd-retain
+  resources:
+    requests: { storage: 2Gi }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: archive-worker
+  labels: { app: archive-worker }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: archive-worker }
+  template:
+    metadata:
+      labels: { app: archive-worker }
+    spec:
+      containers:
+        - name: worker
+          image: busybox:1.36
+          command: ["sh", "-c", "sleep 3600"]
+          resources:
+            # Small enough that "no room on the node" is not a real explanation
+            # — the pod is Pending purely because of the volume.
+            requests: { memory: "16Mi", cpu: "10m" }
+          volumeMounts:
+            - name: archive
+              mountPath: /data
+      volumes:
+        - name: archive
+          persistentVolumeClaim:
+            claimName: archive-data

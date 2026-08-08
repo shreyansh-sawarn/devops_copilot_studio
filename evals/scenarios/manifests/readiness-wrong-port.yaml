@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-api
+  labels: { app: inventory-api }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: inventory-api }
+  template:
+    metadata:
+      labels: { app: inventory-api }
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27-alpine
+          ports: [{ containerPort: 80 }]
+          # nginx serves on 80. The probe asks 9090, which nothing is bound to.
+          # The container is healthy and never restarts — readiness failures
+          # do not restart containers, only withhold the pod from endpoints.
+          readinessProbe:
+            httpGet: { path: /healthz, port: 9090 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            failureThreshold: 2
+          resources:
+            requests: { memory: "16Mi", cpu: "10m" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-api
+spec:
+  # Selector is CORRECT here — endpoints are empty because no pod is Ready,
+  # which is the mirror image of the selector-mismatch scenario.
+  selector: { app: inventory-api }
+  ports:
+    - port: 80
+      targetPort: 80

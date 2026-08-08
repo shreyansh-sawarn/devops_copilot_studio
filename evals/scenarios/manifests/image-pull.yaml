@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reporting-api
+  labels: { app: reporting-api }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: reporting-api }
+  template:
+    metadata:
+      labels: { app: reporting-api }
+    spec:
+      containers:
+        - name: api
+          # Tag does not exist in the registry.
+          image: nginx:v99.99.99-nonexistent
+          resources:
+            requests: { memory: "32Mi", cpu: "10m" }

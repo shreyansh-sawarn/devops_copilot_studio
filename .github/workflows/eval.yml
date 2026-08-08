@@ -57,6 +57,12 @@ jobs:
       - name: Install dependencies
         run: pip install -r evals/requirements.txt
 
+      # Fails in seconds with no cluster and no model spend. A malformed
+      # scenario caught here would otherwise surface 40 minutes and several
+      # API calls later — or worse, score as a silent pass.
+      - name: Validate scenario corpus
+        run: python -m evals.validate
+
       # Hash every input that can change a model's answer. When none of them
       # change, cached responses are replayed and the suite costs nothing.
       - name: Compute prompt fingerprint

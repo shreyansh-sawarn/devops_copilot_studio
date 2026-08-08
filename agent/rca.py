@@ -17,25 +17,9 @@ import litellm
 from pydantic import BaseModel, Field, ValidationError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "rca_system.md"
+from agent.taxonomy import ROOT_CAUSES
 
-# Closed set. An agent answering outside it scores zero, which is intentional:
-# free-text root causes cannot be scored without a human, and an eval that
-# needs a human in the loop will not run on every pull request.
-ROOT_CAUSES = [
-    "container-oomkilled",
-    "image-pull-failure",
-    "readiness-probe-misconfigured",
-    "liveness-probe-misconfigured",
-    "pvc-unbound",
-    "resource-quota-exceeded",
-    "insufficient-node-resources",
-    "crashloop-application-error",
-    "config-or-secret-missing",
-    "dns-resolution-failure",
-    "network-policy-blocking",
-    "service-selector-mismatch",
-]
+PROMPT_PATH = Path(__file__).resolve().parent.parent / "prompts" / "rca_system.md"
 
 
 class RCAHypothesis(BaseModel):

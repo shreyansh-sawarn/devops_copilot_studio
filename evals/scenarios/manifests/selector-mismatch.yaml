@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: checkout-api }
+  template:
+    metadata:
+      labels: { app: checkout-api }
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27-alpine
+          ports: [{ containerPort: 80 }]
+          # Pods are genuinely healthy and Ready. That is the whole point:
+          # the workload is fine, only the Service wiring is wrong.
+          readinessProbe:
+            httpGet: { path: /, port: 80 }
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          resources:
+            requests: { memory: "16Mi", cpu: "10m" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout-api
+spec:
+  # Selector says `checkout`; pods are labelled `checkout-api`.
+  # No pod matches, so endpoints stay empty despite 2/2 Ready pods.
+  selector: { app: checkout }
+  ports:
+    - port: 80
+      targetPort: 80

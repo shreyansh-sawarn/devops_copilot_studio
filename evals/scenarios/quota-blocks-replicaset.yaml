@@ -1,0 +1,27 @@
+id: quota-blocks-replicaset
+title: Deployment reports zero available replicas and no pods exist at all
+category: workload-admission
+difficulty: hard
+
+manifests:
+  - manifests/quota-exceeded.yaml
+
+# No pods are scheduled, so nothing needs to crash — the rejection is immediate.
+settle_seconds: 30
+
+expected:
+  root_cause: resource-quota-exceeded
+  evidence:
+    - "exceeded quota"
+    - "requests.memory"
+  remediation_targets:
+    - "spec.containers[].resources.requests.memory"
+
+# Hard because the usual evidence is absent: `kubectl get pods` returns nothing
+# and `describe pods` is empty. The agent has to notice that the absence of
+# pods is itself the signal and go read ReplicaSet events instead.
+distractors:
+  - id: insufficient-node-resources
+    why: "Rejection happened at admission, before any scheduling was attempted."
+  - id: image-pull-failure
+    why: "No container was ever created, so no image was ever pulled."

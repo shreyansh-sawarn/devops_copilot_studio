@@ -2,3 +2,4 @@ litellm==1.55.3
 pydantic==2.10.4
 PyYAML==6.0.2
 tenacity==9.0.0
+python-dotenv==1.0.1

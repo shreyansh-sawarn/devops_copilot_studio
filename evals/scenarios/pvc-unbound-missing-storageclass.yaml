@@ -1,0 +1,25 @@
+id: pvc-unbound-missing-storageclass
+title: Pod stuck Pending because its PVC references a nonexistent StorageClass
+category: storage
+difficulty: medium
+
+manifests:
+  - manifests/pvc-unbound.yaml
+
+settle_seconds: 40
+
+expected:
+  root_cause: pvc-unbound
+  evidence:
+    - "unbound immediate PersistentVolumeClaims"
+    - "fast-ssd-retain"
+  remediation_targets:
+    - "spec.storageClassName"
+
+distractors:
+  # The single most common misdiagnosis of a Pending pod, and the reason the
+  # manifest requests only 16Mi — "no capacity" is not a credible reading.
+  - id: insufficient-node-resources
+    why: "Pending suggests unschedulable, but the node has ample capacity."
+  - id: resource-quota-exceeded
+    why: "No quota exists in this namespace; nothing was rejected at admission."
