@@ -1,0 +1,28 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+kubeconfig
+**/secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Eval artifacts
+.eval_cache/
+eval_results/*.json
+!eval_results/.gitkeep
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

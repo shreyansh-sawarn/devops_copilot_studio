@@ -1,0 +1,40 @@
+id: oomkilled-memory-limit
+title: Pod restart-looping because its memory limit is below actual usage
+category: resource-limits
+difficulty: easy
+
+manifests:
+  - manifests/oomkilled.yaml
+
+# How long to let the failure actually manifest before collecting state.
+# Too short and the agent sees a healthy-looking cluster; too long and the
+# suite crawls. Tuned per scenario.
+settle_seconds: 50
+
+expected:
+  # The single correct answer. Scored as exact match against the agent's
+  # top-ranked hypothesis — no partial credit for "something about memory".
+  root_cause: container-oomkilled
+
+  # Substrings the agent must cite from real cluster state. This is the
+  # grounding score: an agent that guesses the right answer without pointing
+  # at evidence is not doing RCA, and this is what catches it.
+  evidence:
+    - "OOMKilled"
+    - "exit code 137"
+
+  # A correct remediation has to touch this field. Keeps "add more memory"
+  # (vague) distinguishable from an actionable patch.
+  remediation_targets:
+    - "spec.containers[].resources.limits.memory"
+
+# Symptoms deliberately present in the namespace that are DOWNSTREAM of the
+# real cause. An agent that blames one of these scores zero even if it also
+# mentions the true cause — this is what makes the scenario non-gameable.
+# Ids MUST come from the ROOT_CAUSES taxonomy in agent/rca.py — otherwise the
+# agent can never emit them and the distractor check silently always passes.
+distractors:
+  - id: readiness-probe-misconfigured
+    why: "The probe fails because the container is dead, not the reverse."
+  - id: service-selector-mismatch
+    why: "Endpoints are empty as a consequence of no ready pods, not a bad selector."

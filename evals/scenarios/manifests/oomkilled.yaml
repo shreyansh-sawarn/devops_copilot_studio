@@ -1,0 +1,47 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memory-hog
+  labels: { app: memory-hog }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: memory-hog }
+  template:
+    metadata:
+      labels: { app: memory-hog }
+    spec:
+      terminationGracePeriodSeconds: 1
+      containers:
+        - name: hog
+          image: python:3.12-alpine
+          # Allocates ~120Mi against a 64Mi limit: deterministic OOMKill,
+          # fast enough to observe inside settle_seconds.
+          command: ["python", "-c"]
+          args:
+            - |
+              import time
+              buf = []
+              while True:
+                  buf.append(bytearray(10 * 1024 * 1024))
+                  time.sleep(0.4)
+          resources:
+            requests: { memory: "32Mi", cpu: "10m" }
+            limits: { memory: "64Mi", cpu: "100m" }
+          # Distractor: this will fail, but only because the container is dead.
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+---
+# Distractor: a Service whose endpoints stay empty as a downstream effect.
+apiVersion: v1
+kind: Service
+metadata:
+  name: memory-hog
+spec:
+  selector: { app: memory-hog }
+  ports:
+    - port: 80
+      targetPort: 8080
